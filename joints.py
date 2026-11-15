@@ -128,6 +128,20 @@ def build_joints(pcf: PcfFile) -> list[Joint]:
     return joints
 
 
+def joint_position(joint: Joint) -> EndPoint | None:
+    """Return the point where flange A meets the gasket (or flange B)."""
+    neighbour = joint.gasket
+    if neighbour is None:
+        neighbour = joint.flange_b
+    if neighbour is None:
+        return None
+    for p in joint.flange_a.end_points:
+        for q in neighbour.end_points:
+            if same_point(p, q):
+                return p
+    return None
+
+
 def parse_description(description: str | None) -> tuple[str | None, str | None]:
     """Return (pressure_class, facing): "FLANGE WN 150# RF" -> ("150", "RF")."""
     if not description:
