@@ -55,7 +55,7 @@ from the item description (`FLANGE WN 150# RF ...` gives class 150, facing RF).
 
 ## Database
 
-![ER diagram of the database](docs/er-diagram.png)
+![ER diagram of the database](docs/er-diagram.PNG)
 
 | Table | One row per |
 | --- | --- |
