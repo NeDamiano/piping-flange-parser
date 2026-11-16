@@ -3,13 +3,13 @@
 A small exploratory prototype: it reads piping data in PCF format, rebuilds
 the flanged joints, checks them and stores them in a SQLite database.
 
-In a process plant, pipes are assembled on site through flanged joints: two
+In a process plant, many pipe connections are flanged joints: typically two
 flanges, a gasket between them and a set of bolts. A PCF (Piping Component
 File) lists these parts one by one, without saying which ones belong together.
 This project turns that flat list into a register of joints and reports the
 ones that look incomplete or inconsistent.
 
-> Draft project on hand-written sample files. Not meant for production use.
+> Exploratory prototype on hand-written sample files, built with AI assistance (Claude). Not meant for production use.
 
 ## Example
 
