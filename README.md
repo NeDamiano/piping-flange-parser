@@ -14,13 +14,14 @@ ones that look incomplete or inconsistent.
 ## Example
 
 ```text
-> python main.py samples/line1.pcf samples/line2_missing_gasket.pcf samples/line3_missing_description.pcf
+> python main.py samples/line1.pcf samples/line2_missing_gasket.pcf samples/line3_missing_description.pcf samples/line4_multiple_joints.pcf
 line1.pcf: 1 joints, 0 issues
 line2_missing_gasket.pcf: 1 joints, 1 issues
 line3_missing_description.pcf: 1 joints, 1 issues
+line4_multiple_joints.pcf: 4 joints, 5 issues
 Database: flanges.db
-out/joints.csv: 3 joints
-out/issues.csv: 2 issues
+out/joints.csv: 7 joints
+out/issues.csv: 7 issues
 ```
 
 The issues found, as written to `out/issues.csv`:
@@ -29,6 +30,11 @@ The issues found, as written to `out/issues.csv`:
 | --- | --- | --- | --- |
 | 3"-P-1002 | 2 | MISSING_GASKET | No gasket between the two flanges |
 | 3"-P-1003 | 3 | MISSING_DESCRIPTION | Item code FLG-WN-3-150 has no description in MATERIALS |
+| 3"-P-1004 | 5 | CLASS_MISMATCH | Flange classes differ: 150 and 300 |
+| 3"-P-1004 | 5 | FACING_MISMATCH | Flange facings differ: RF and RTJ |
+| 3"-P-1004 | 5 | LINE_CLASS_MISMATCH | Flange B class 300 differs from the line class 150 |
+| 3"-P-1004 | 6 | MISSING_BOLTS | No bolt set for this joint |
+| 3"-P-1004 | 7 | UNPAIRED_FLANGE | Flange has no mating flange in this file |
 
 Requires Python 3.10 or later, no external libraries.
 
@@ -74,11 +80,17 @@ Design notes:
 - All parts of a joint share one table, with their role as data. Separate
   tables per kind of part would give stronger constraints, but a schema change
   for every new kind (spectacle blinds, orifice plates, wafer valves).
+- The nominal class of the line and the pressure class of the items are kept
+  separate on purpose: comparing them is one of the checks.
 - Incomplete data is stored and reported in `issues`, not rejected.
 
 The full column list is in [schema.sql](schema.sql).
 
 ## Checks
+
+The checks validate the input data before it enters the register: they
+report what is missing or inconsistent in the files. They do not judge the
+design of the piping.
 
 | Code | Meaning |
 | --- | --- |
@@ -89,20 +101,24 @@ The full column list is in [schema.sql](schema.sql).
 | `MISSING_DESCRIPTION` | An item code has no description in `MATERIALS` |
 | `CLASS_MISMATCH` | The two flanges have different pressure classes |
 | `FACING_MISMATCH` | The two flanges have different facings |
+| `LINE_CLASS_MISMATCH` | A flange class differs from the nominal class of the line |
 
 ## Limitations
 
 - Sample files are written by hand from public descriptions of the PCF
-  format; `line2` and `line3` contain anomalies added on purpose.
+  format; `line2`, `line3` and `line4` contain anomalies added on purpose.
 - Component blocks are recognised from a fixed list of component types.
 - Bolt sets are assigned to a joint by their position in the file.
 - A flange without a mate is reported as something to verify: it may be
   connected to equipment or to a flanged valve, which are not handled.
 - One file is one line; loading the same pipeline reference again replaces it.
 - Only the facings `RF`, `FF` and `RTJ` are recognised.
+- Issues are linked to joints only: a problem that concerns a whole line
+  cannot be recorded.
+- The item catalog is shared by all loaded files.
 
 ## Possible next steps
 
 - Other input formats and exports from a 3D model.
 - Assembly and inspection history linked to each joint.
-- Checks at line level and automated tests.
+- Issues at line level and automated tests.

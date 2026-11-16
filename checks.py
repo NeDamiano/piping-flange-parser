@@ -89,12 +89,41 @@ def check_flange_mismatch(joint: Joint, pcf: PcfFile) -> list[Issue]:
     return issues
 
 
+def digits_of(text: str | None) -> str:
+    """Keep only the digits of a text: "150#" -> "150"."""
+    result = ""
+    if text is not None:
+        for character in text:
+            if character.isdigit():
+                result += character
+    return result
+
+
+def check_line_class_mismatch(joint: Joint, pcf: PcfFile) -> list[Issue]:
+    """A flange whose pressure class differs from the nominal class of the line."""
+    line_class = digits_of(pcf.header.get("NOMINAL-CLASS"))
+    if line_class == "":
+        return []
+
+    issues = []
+    for label, flange in (("A", joint.flange_a), ("B", joint.flange_b)):
+        if flange is None:
+            continue
+        flange_class, facing = class_and_facing(flange, pcf)
+        if flange_class is not None and flange_class != line_class:
+            message = (f"Flange {label} class {flange_class} differs from "
+                       f"the line class {line_class}")
+            issues.append(Issue(joint, "LINE_CLASS_MISMATCH", message))
+    return issues
+
+
 ALL_CHECKS = [
     check_unpaired_flange,
     check_missing_gasket,
     check_missing_bolts,
     check_missing_description,
     check_flange_mismatch,
+    check_line_class_mismatch,
 ]
 
 
